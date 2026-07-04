@@ -1,66 +1,71 @@
-
 from flask import Flask, render_template, request
+import requests
 import whois
 from datetime import datetime
 import re
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-def get_domain_age(domain):
-    try:
-        w = whois.whois(domain)
-        creation_date = w.creation_date
-        if isinstance(creation_date, list):
-            creation_date = creation_date[0]
-        age = (datetime.now() - creation_date).days
-        return f"{age} days old"
-    except:
-        return "Could not fetch"
-
-def check_phishing(url):
+def check_url(url):
     issues = []
     safe = True
     
-    # 1. Check for @ symbol
-    if "@" in url:
-        issues.append("URL contains @ symbol - used for phishing")
+    # 1. Check if URL has https
+    if not url.startswith('https://'):
+        issues.append("Website does not use HTTPS")
         safe = False
     
-    # 2. Check for IP address instead of domain
-    if re.match(r'https?://\d+\.\d+\.\d+\.\d+', url):
-        issues.append("URL uses IP address instead of domain name")
-        safe = False
+    # 2. Check for suspicious keywords
+    suspicious_words = ['login', 'verify', 'update', 'bank', 'paypal', 'account']
+    for word in suspicious_words:
+        if word in url.lower():
+            issues.append(f"Suspicious keyword found: {word}")
     
-    # 3. Check for HTTPS
-    if not url.startswith("https://"):
-        issues.append("URL does not use HTTPS - not secure")
-        safe = False
+    # 3. Check domain age using whois
+    try:
+        domain = urlparse(url).netloc
+        domain_info = whois.whois(domain)
+        creation_date = domain_info.creation_date
+        
+        if isinstance(creation_date, list):
+            creation_date = creation_date[0]
+            
+        if creation_date:
+            age_days = (datetime.now() - creation_date).days
+            domain_age = f"{age_days} days old"
+            if age_days < 90:
+                issues.append(f"New domain - only {age_days} days old")
+                safe = False
+        else:
+            domain_age = "Could not fetch"
+    except:
+        domain_age = "Could not fetch"
+        issues.append("Could not verify domain info")
     
-    # 4. Check for long URL
-    if len(url) > 75:
-        issues.append("URL is unusually long")
-        safe = False
-    
-    return {"safe": safe, "issues": issues}
+    return {'safe': safe, 'issues': issues, 'domain_age': domain_age}
 
-@app.route("/", methods=["GET", "POST"])
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
     result = None
-    url = ""
-    domain_age = ""
+    url = None
+    domain_age = None
     
-    if request.method == "POST":
-        url = request.form["url"]
-        result = check_phishing(url)
+    if request.method == 'POST':
+        url = request.form['url']
+        result_dict = check_url(url)
         
-        # Get domain from URL
-        try:
-            domain = url.split("//")[1].split("/")[0].split("@")[-1]
-            domain_age = get_domain_age(domain)
-        except:
-            domain_age = "Invalid URL"
-    
-    return render_template("index.html", result=result, url=url, domain_age=domain_age)
+        # Yahi se JSON thik hoga
+        if result_dict['safe']:
+            result = "✅ SAFE - Ye website safe hai"
+        else:
+            result = "⚠️ SUSPICIOUS - " + ", ".join(result_dict['issues'])
+            
+        domain_age = result_dict['domain_age']
 
-if __name__ == "__main__":
+    return render_template('index.html', result=result, url=url, domain_age=domain_age)
+
+
+if __name__ == '__main__':
     app.run(debug=True)
