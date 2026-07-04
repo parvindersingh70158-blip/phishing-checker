@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request
 import requests
-import whois
 from datetime import datetime
 import re
 from urllib.parse import urlparse
@@ -17,31 +16,18 @@ def check_url(url):
         safe = False
     
     # 2. Check for suspicious keywords
-    suspicious_words = ['login', 'verify', 'update', 'bank', 'paypal', 'account']
+    suspicious_words = ['login', 'verify', 'update', 'bank', 'paypal', 'account', 'secure']
     for word in suspicious_words:
         if word in url.lower():
             issues.append(f"Suspicious keyword found: {word}")
+            safe = False
     
-    # 3. Check domain age using whois
-    try:
-        domain = urlparse(url).netloc
-        domain_info = whois.whois(domain)
-        creation_date = domain_info.creation_date
-        
-        if isinstance(creation_date, list):
-            creation_date = creation_date[0]
-            
-        if creation_date:
-            age_days = (datetime.now() - creation_date).days
-            domain_age = f"{age_days} days old"
-            if age_days < 90:
-                issues.append(f"New domain - only {age_days} days old")
-                safe = False
-        else:
-            domain_age = "Could not fetch"
-    except:
-        domain_age = "Could not fetch"
-        issues.append("Could not verify domain info")
+    # 3. Check URL length - phishing urls are usually long
+    if len(url) > 75:
+        issues.append("URL is too long")
+        safe = False
+    
+    domain_age = "Manual Check Needed" # whois hata diya isliye
     
     return {'safe': safe, 'issues': issues, 'domain_age': domain_age}
 
@@ -56,9 +42,8 @@ def home():
         url = request.form['url']
         result_dict = check_url(url)
         
-        # Yahi se JSON thik hoga
         if result_dict['safe']:
-            result = "✅ SAFE - Ye website safe hai"
+            result = "✅ SAFE - Ye website safe lag rahi hai"
         else:
             result = "⚠️ SUSPICIOUS - " + ", ".join(result_dict['issues'])
             
@@ -68,4 +53,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='0.0.0.0', port=10000)
