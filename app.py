@@ -11,9 +11,11 @@ def check_url(url):
         issues.append("No HTTPS")
         safe = False
     
-    if 'login' in url.lower() or 'verify' in url.lower():
-        issues.append("Suspicious keywords")
-        safe = False
+    suspicious_words = ['login', 'verify', 'update', 'bank', 'account', 'secure']
+    for word in suspicious_words:
+        if word in url.lower():
+            issues.append(f"Keyword: {word}")
+            safe = False
     
     if len(url) > 75:
         issues.append("URL too long")
@@ -31,9 +33,9 @@ def home():
         url = request.form['url']
         result_dict = check_url(url)
         if result_dict['safe']:
-            result = "✅ SAFE"
+            result = "✅ SAFE - Ye website safe hai"
         else:
-            result = "⚠️ SUSPICIOUS: " + ", ".join(result_dict['issues'])
+            result = "⚠️ SUSPICIOUS - " + ", ".join(result_dict['issues'])
         domain_age = result_dict['domain_age']
     return render_template('index.html', result=result, url=url, domain_age=domain_age)
 
