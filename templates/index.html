@@ -41,3 +41,70 @@
 </div>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Phishing URL Checker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            /* LIVE WALLPAPER / GRADIENT BACKGROUND */
+            background: linear-gradient(-45deg, #1e3c72, #2a5298, #1e3c72, #2a5298);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+        }
+
+        h1 { color: #1e3c72; margin-bottom: 25px; font-size: 28px; }
+        input[type="text"] { width: 100%; padding: 14px; border: 2px solid #2a5298; border-radius: 10px; font-size: 15px; margin-bottom: 15px; }
+        button { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px 35px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .result { margin-top: 25px; padding: 20px; border-radius: 10px; background: #f8f9fa; }
+        .safe { color: #28a745; font-weight: bold; font-size: 18px; }
+        .suspicious { color: #dc3545; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Pro Phishing URL Checker</h1>
+        <form method="POST">
+            <input type="text" name="url" placeholder="Enter URL here - example: https://google.com" required>
+            <button type="submit">Scan URL</button>
+        </form>
+        {% if result %}
+        <div class="result">
+            <h3>Result for: {{ url }}</h3>
+            <p><b>Domain Age:</b> {{ domain_age }}</p>
+            {% if 'SAFE' in result %}
+                <p class="safe">✅ {{ result }}</p>
+            {% else %}
+                <p class="suspicious">⚠️ {{ result }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
