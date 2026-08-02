@@ -1,33 +1,48 @@
+import streamlit as st
+from urllib.parse import urlparse
+
+st.set_page_config(page_title="Phishing URL Checker")
+
+st.title("🔒 Phishing URL Checker")
+st.write("Enter any URL and click SCAN")
+
+url = st.text_input("URL", "")
+
 def check_url(url):
     if not url:
-        return "ERROR"
+        return "EMPTY"
     
-    url_lower = url.lower()
+    # https add karna hai to add kar de
+    if not url.startswith("http"):
+        url = "https://" + url
     
-    # agar https nahi hai to jod de warna domain nahi milega
-    if not url.startswith('http'):
-        url = 'https://' + url
+    parsed = urlparse(url)
+    domain = parsed.netloc.replace('www.', '').lower()
     
-    try:
-        parsed = urlparse(url)
-        domain = parsed.netloc.replace('www.', '').lower()
-    except:
-        domain = url.replace('www.', '').replace('https://','').replace('http://','').lower()
+    # SAFE LIST
+    trusted = ["google.com", "youtube.com", "facebook.com", "amazon.com", "github.com", "microsoft.com", "render.com", "netlify.com"]
     
-    # Trusted list - ab render bhi hai
-    trusted = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'github.com', 'render.com', 'netlify.com', 'microsoft.com']
-    if domain in trusted: 
+    if domain in trusted:
         return "SAFE"
     
-    # Phishing checks
+    # PHISHING CHECKS
     score = 0
-    if not url.startswith('https'): score += 3
-    if '@' in url: score += 3
-    if domain.count('.') > 3: score += 2
-    if '-' in domain: score += 1
-    if any(w in url_lower for w in ['login','verify','account','update','bank','paypal','otp']): score += 2
+    if "https" not in url: score += 3
+    if "@" in url: score += 3
+    if "-" in domain: score += 1
+    if domain.count(".") > 3: score += 2
+    if any(x in url.lower() for x in ["login","verify","account","bank","paypal","otp"]): score += 2
     
     if score >= 3:
         return "PHISHING"
-    else:
-        return "SAFE"
+    return "SAFE"
+
+if st.button("SCAN URL NOW"):
+    result = check_url(url)
+    
+    if result == "EMPTY":
+        st.warning("Please enter a URL")
+    elif result == "SAFE":
+        st.success("✅ THIS URL IS SAFE")
+    elif result == "PHISHING":
+        st.error("⚠️ THIS IS A PHISHING URL!")
