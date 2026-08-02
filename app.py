@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Phishing URL Checker", layout="wide")
 
-# ANIMATED PARTICLE BACKGROUND
+# ANIMATED PARTICLE BACKGROUND - SAME AS BEFORE, NO CHANGE
 components.html("""
 <style>
 body {margin: 0; overflow: hidden;}
@@ -35,7 +35,7 @@ particlesJS("particles-js", {
 </script>
 """, height=0)
 
-# CLEAN UI CSS
+# CLEAN UI CSS - SAME AS BEFORE
 st.markdown("""
 <style>
     #MainMenu, footer {visibility: hidden;}
@@ -51,7 +51,6 @@ st.markdown("""
         text-align: center;
     }
     
-    /* Title inside box with glow */
     .title-box {
         background: rgba(0, 114, 255, 0.2);
         border: 1px solid #00c6ff;
@@ -65,7 +64,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* Smaller input box */
     .stTextInput {
         max-width: 500px;
         margin: 0 auto;
@@ -78,7 +76,6 @@ st.markdown("""
         text-align: center;
     }
     
-    /* Center button */
     div.stButton {text-align: center;}
     .stButton>button {
         background: linear-gradient(90deg, #00c6ff, #0072ff);
@@ -95,29 +92,42 @@ st.markdown("""
 
 st.markdown('<div class="main-box">', unsafe_allow_html=True)
 
-# TITLE IN BOX
 st.markdown('<div class="title-box"><h1>🔒 Phishing URL Checker</h1></div>', unsafe_allow_html=True)
 
 st.write("Enter any URL to verify if it is **Safe** or **Phishing**")
 
 url = st.text_input("", "https://google.com", label_visibility="collapsed")
 
+# NEW STRICT LOGIC - ONLY THIS CHANGED
+def check_url(url):
+    url_lower = url.lower()
+    parsed = urlparse(url)
+    domain = parsed.netloc.replace('www.', '')
+    
+    # 1. Trusted websites - direct SAFE
+    trusted = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'github.com', 'microsoft.com', 'instagram.com']
+    if domain in trusted: 
+        return "SAFE"
+    
+    # 2. Red flags - direct PHISHING
+    if 'https' not in url: 
+        return "PHISHING"
+    if '@' in url: 
+        return "PHISHING"
+    if domain.count('.') > 3: 
+        return "PHISHING"
+    if '-' in domain: 
+        return "PHISHING"
+    if any(w in url_lower for w in ['login','verify','account','update','secure','bank','paypal']):
+        return "PHISHING"
+    if 'bit.ly' in url_lower or 'tinyurl' in url_lower:
+        return "PHISHING"
+    
+    # 3. All other unknown domains = PHISHING for demo
+    return "PHISHING"
+
 if st.button("🚀 SCAN URL NOW"):
     if url:
-        def check_url(url):
-            url_lower = url.lower()
-            trusted = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'github.com']
-            if any(t in url_lower for t in trusted): return "SAFE"
-            
-            score = 0
-            if 'https' not in url: score += 2
-            if '@' in url: score += 3
-            if url.count('.') > 4: score += 2
-            if any(w in url_lower for w in ['login','verify','account']): score += 2
-            if 'bit.ly' in url_lower: score += 3
-            
-            return "PHISHING" if score >= 3 else "SAFE"
-
         result = check_url(url)
         
         if result == "PHISHING":
