@@ -1,43 +1,132 @@
 from flask import Flask, render_template, request
+import pickle
 from urllib.parse import urlparse
+import re
 
 app = Flask(__name__)
 
-def check_url(url):
-    issues = []
-    safe = True
-    
-    if not url.startswith('https://'):
-        issues.append("No HTTPS")
-        safe = False
-    
-    suspicious_words = ['login', 'verify', 'update', 'bank', 'account', 'secure']
-    for word in suspicious_words:
-        if word in url.lower():
-            issues.append(f"Keyword: {word}")
-            safe = False
-    
-    if len(url) > 75:
-        issues.append("URL too long")
-        safe = False
-    
-    domain_age = "N/A"
-    return {'safe': safe, 'issues': issues, 'domain_age': domain_age}
+# model load kar
+model = pickle.load(open('model.pkl', 'rb'))
+
+def extract_features(url):
+    features = []
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    protocol = parsed.scheme
+
+    # 1. having_IP_Address
+    features.append(1 if re.match(r'^\d+\.\d+\.\d+\.\d+', domain) else 0)
+
+    # 2. URL_Length
+    if len(url) < 54: features.append(0)
+    elif len(url) <= 75: features.append(1)
+    else: features.append(1)
+
+    # 3. Shortening_Service
+    features.append(1 if re.search('bit\.ly|goo\.gl|tinyurl|t\.co|ow\.ly|tiny.cc', url) else 0)
+
+    # 4. having_@_Symbol
+    features.append(1 if '@' in url else 0)
+
+    # 5. double_slash_redirecting
+    features.append(1 if url.rfind('//') > 6 else 0)
+
+    # 6. Prefix_Suffix - paypal-login.com
+    features.append(1 if '-' in domain else 0)
+
+    # 7. having_Sub_Domain
+    if domain.count('.') == 1: features.append(0)
+    elif domain.count('.') == 2: features.append(1)
+    else: features.append(1)
+
+    # 8. HTTPS - akela https se SAFE nahi
+    features.append(1 if protocol == 'https' else 0)
+
+    # 9. Domain_Registration_Length - dummy
+    features.append(0)
+
+    # 10. Favicon
+    features.append(0)
+
+    # 11. Port
+    features.append(1 if ':' in domain else 0)
+
+    # 12. HTTPS_Token - https domain ke beech me
+    features.append(1 if 'https' in domain else 0)
+
+    # 13. Request_URL
+    features.append(0)
+
+    # 14. URL_of_Anchor
+    features.append(0)
+
+    # 15. Links_in_tags
+    features.append(0)
+
+    # 16. SFH
+    features.append(0)
+
+    # 17. Submitting_to_email
+    features.append(0)
+
+    # 18. Abnormal_URL
+    features.append(0)
+
+    # 19. Redirect
+    features.append(0)
+
+    # 20. on_mouseover
+    features.append(0)
+
+    # 21. RightClick
+    features.append(0)
+
+    # 22. popUpWindow
+    features.append(0)
+
+    # 23. Iframe
+    features.append(0)
+
+    # 24. age_of_domain
+    features.append(0)
+
+    # 25. DNSRecord
+    features.append(0)
+
+    # 26. web_traffic
+    features.append(0)
+
+    # 27. Page_Rank
+    features.append(0)
+
+    # 28. Google_Index
+    features.append(0)
+
+    # 29. Links_pointing_to_page
+    features.append(0)
+
+    # 30. Statistical_report
+    features.append(0)
+
+    return [features]
 
 @app.route('/', methods=['GET', 'POST'])
-def home():
-    result = None
-    url = None
-    domain_age = None
+def index():
+    result = ""
+    color = ""
     if request.method == 'POST':
         url = request.form['url']
-        result_dict = check_url(url)
-        if result_dict['safe']:
-            result = "✅ SAFE - Ye website safe hai"
-        else:
-            result = "⚠️ SUSPICIOUS - " + ", ".join(result_dict['issues'])
-        domain_age = result_dict['domain_age']
-    return render_template('index.html', result=result, url=url, domain_age=domain_age)
+        features = extract_features(url)
+        prediction = model.predict(features)[0]
 
-if __name__ == '__main__':
-    app.run()
+        if prediction == 1:
+            result = "SAFE ✅"
+            color = "green"
+        else:
+            result = "DANGEROUS ❌"
+            color = "red"
+
+    return render_template('index.html', result=result, color=color)
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=10000, debug=True)
