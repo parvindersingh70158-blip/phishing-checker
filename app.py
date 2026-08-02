@@ -7,17 +7,23 @@ st.write("Enter any URL to check if it is Safe or Phishing")
 
 def check_url(url):
     url_lower = url.lower()
-    suspicious_words = ['login', 'verify', 'account', 'update', 'secure', 'bank', 'paypal']
-    suspicious_domains = ['bit.ly', 'tinyurl']
+    
+    # Trusted websites - direct SAFE
+    trusted = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'github.com', 'microsoft.com']
+    if any(t in url_lower for t in trusted):
+        return "SAFE"
     
     score = 0
+    # Red flags
     if 'https' not in url: score += 2
     if '@' in url: score += 3
-    if url.count('.') > 3: score += 2
-    if any(word in url_lower for word in suspicious_words): score += 2
-    if any(d in url_lower for d in suspicious_domains): score += 3
+    if url.count('.') > 4: score += 2
+    if '-' in urlparse(url).netloc: score += 1
+    if 'login' in url_lower or 'verify' in url_lower or 'account' in url_lower: score += 2
+    if 'bit.ly' in url_lower or 'tinyurl' in url_lower: score += 3
+    if 'bank' in url_lower or 'paypal' in url_lower: score += 2
     
-    if score >= 4:
+    if score >= 3:
         return "PHISHING"
     else:
         return "SAFE"
@@ -33,6 +39,6 @@ if st.button("Check URL"):
             st.write("Do not click on this link")
         else:
             st.success("✅ THIS URL IS SAFE")
-            st.write("You can proceed")
+            st.write("You can proceed safely")
     else:
         st.warning("Please enter a URL first")
