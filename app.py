@@ -4,13 +4,10 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Phishing URL Checker", layout="wide")
 
-# ANIMATED PARTICLE BACKGROUND - ONLY BACKGROUND MOVES
+# ANIMATED PARTICLE BACKGROUND
 components.html("""
 <style>
-body {
-    margin: 0;
-    overflow: hidden;
-}
+body {margin: 0; overflow: hidden;}
 #particles-js {
     position: fixed;
     width: 100%;
@@ -38,7 +35,7 @@ particlesJS("particles-js", {
 </script>
 """, height=0)
 
-# SIMPLE CLEAN UI CSS
+# CLEAN UI CSS
 st.markdown("""
 <style>
     #MainMenu, footer {visibility: hidden;}
@@ -49,42 +46,63 @@ st.markdown("""
         backdrop-filter: blur(5px);
         padding: 40px;
         border-radius: 15px;
-        max-width: 800px;
+        max-width: 700px;
         margin: 60px auto;
+        text-align: center;
     }
     
-    h1 {
+    /* Title inside box with glow */
+    .title-box {
+        background: rgba(0, 114, 255, 0.2);
+        border: 1px solid #00c6ff;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 25px;
+    }
+    .title-box h1 {
         color: #00e5ff !important;
-        text-align: center;
+        text-shadow: 0 0 10px #00e5ff;
+        margin: 0;
+    }
+    
+    /* Smaller input box */
+    .stTextInput {
+        max-width: 500px;
+        margin: 0 auto;
     }
     .stTextInput>div>div>input {
         background: rgba(0,0,0,0.5);
         color: white;
         border: 1px solid #0072ff;
         border-radius: 8px;
+        text-align: center;
     }
+    
+    /* Center button */
+    div.stButton {text-align: center;}
     .stButton>button {
         background: linear-gradient(90deg, #00c6ff, #0072ff);
         color: white;
         border: none;
         border-radius: 8px;
-        padding: 10px 30px;
+        padding: 12px 35px;
         font-weight: bold;
-        display: block;
-        margin: 0 auto;
+        font-size: 16px;
+        margin-top: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-box">', unsafe_allow_html=True)
 
-st.title("🔒 Phishing URL Checker")
-st.write("### AI Powered Cybersecurity Tool")
-st.write("Enter any URL to check if it is **Safe** or **Phishing**")
+# TITLE IN BOX
+st.markdown('<div class="title-box"><h1>🔒 Phishing URL Checker</h1></div>', unsafe_allow_html=True)
 
-url = st.text_input("Enter URL here:", "https://google.com")
+st.write("Enter any URL to verify if it is **Safe** or **Phishing**")
 
-if st.button("Scan URL Now"):
+url = st.text_input("", "https://google.com", label_visibility="collapsed")
+
+if st.button("🚀 SCAN URL NOW"):
     if url:
         def check_url(url):
             url_lower = url.lower()
