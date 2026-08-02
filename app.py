@@ -1,68 +1,34 @@
 import streamlit as st
-import pickle
-import numpy as np
 from urllib.parse import urlparse
 
 st.set_page_config(page_title="Phishing URL Checker", layout="centered")
 st.title("🔒 Phishing URL Checker")
 st.write("Enter any URL to check if it is Safe or Phishing")
 
-@st.cache_resource
-def load_model():
-    with open('model.pkl', 'rb') as file:
-        model = pickle.load(file)
-    return model
-
-model = load_model()
-
-def extract_features(url):
-    features = []
-    parsed = urlparse(url)
-    domain = parsed.netloc
+def check_url(url):
     url_lower = url.lower()
+    suspicious_words = ['login', 'verify', 'account', 'update', 'secure', 'bank', 'paypal']
+    suspicious_domains = ['bit.ly', 'tinyurl']
     
-    # EXACT 30 FEATURES - MUST MATCH TRAINING
-    features.append(len(url))
-    features.append(url.count('.'))
-    features.append(url.count('/'))
-    features.append(url.count('-'))
-    features.append(url.count('@'))
-    features.append(url.count('?'))
-    features.append(url.count('&'))
-    features.append(url.count('='))
-    features.append(url.count('_'))
-    features.append(url.count('%'))
-    features.append(1 if 'https' in url else 0)
-    features.append(1 if 'http' in url else 0)
-    features.append(len(domain))
-    features.append(len(parsed.path))
-    features.append(url.count('www'))
-    features.append(1 if domain.count('.') > 3 else 0)
-    features.append(1 if 'bit.ly' in url_lower else 0)
-    features.append(1 if 'tinyurl' in url_lower else 0)
-    features.append(1 if 'login' in url_lower else 0)
-    features.append(1 if 'secure' in url_lower else 0)
-    features.append(1 if 'account' in url_lower else 0)
-    features.append(1 if 'update' in url_lower else 0)
-    features.append(1 if 'verify' in url_lower else 0)
-    features.append(1 if 'bank' in url_lower else 0)
-    features.append(1 if 'paypal' in url_lower else 0)
-    features.append(1 if 'amazon' in url_lower else 0)
-    features.append(1 if 'google' in url_lower else 0)
-    features.append(1 if 'facebook' in url_lower else 0)
-    features.append(1 if 'twitter' in url_lower else 0)
-    features.append(1 if 'instagram' in url_lower else 0)
+    score = 0
+    if 'https' not in url: score += 2
+    if '@' in url: score += 3
+    if url.count('.') > 3: score += 2
+    if any(word in url_lower for word in suspicious_words): score += 2
+    if any(d in url_lower for d in suspicious_domains): score += 3
     
-    return np.array([features])
+    if score >= 4:
+        return "PHISHING"
+    else:
+        return "SAFE"
 
 url = st.text_input("Enter URL here:", "https://google.com")
 
 if st.button("Check URL"):
     if url:
-        features = extract_features(url)
-        prediction = model.predict(features)
+        result = check_url(url)
         
-        if prediction[0] == 1:
+        if result == "PHISHING":
             st.error("⚠️ THIS IS A PHISHING URL!")
             st.write("Do not click on this link")
         else:
