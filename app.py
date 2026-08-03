@@ -4,25 +4,18 @@ import random
 
 st.set_page_config(page_title="Phishing URL Checker", layout="centered")
 
-# ANIMATED WALLPAPER + PARTICLES CSS
+# FIXED DARK BG + PARTICLES
 st.markdown("""
 <style>
     #MainMenu, footer {visibility: hidden;}
     
-    /* ANIMATED GRADIENT BG */
+    /* FIXED BG - HILEGA NAHI */
     .stApp {
-        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #0f2027);
-        background-size: 400% 400%;
-        animation: gradient 15s ease infinite;
+        background: #050510;
         overflow: hidden;
     }
-    @keyframes gradient {
-        0% {background-position: 0% 50%;}
-        50% {background-position: 100% 50%;}
-        100% {background-position: 0% 50%;}
-    }
     
-    /* FLOATING PARTICLES */
+    /* PARTICLES Niche se Upar */
     .particles {
         position: fixed;
         top: 0;
@@ -35,9 +28,9 @@ st.markdown("""
     .particle {
         position: absolute;
         bottom: -10px;
-        background: rgba(0, 198, 255, 0.5);
+        background: rgba(0, 198, 255, 0.6);
         border-radius: 50%;
-        box-shadow: 0 0 10px #00c6ff;
+        box-shadow: 0 0 8px #00c6ff;
         animation: rise linear infinite;
     }
     @keyframes rise {
@@ -54,7 +47,7 @@ st.markdown("""
         max-width: 850px;
         margin: 80px auto;
         padding: 40px;
-        background: rgba(5, 5, 20, 0.7);
+        background: rgba(10, 10, 25, 0.85);
         border-radius: 20px;
         border: 1px solid rgba(0, 198, 255, 0.4);
         backdrop-filter: blur(15px);
@@ -64,7 +57,7 @@ st.markdown("""
         color: #00e5ff !important;
         font-size: 42px !important;
         text-align: center;
-        text-shadow: 0 0 20px #00e5ff;
+        text-shadow: 0 0 20px #00c6ff;
         margin-bottom: 15px !important;
     }
     .subtitle {
@@ -74,7 +67,7 @@ st.markdown("""
         margin-bottom: 30px !important;
     }
     .stTextInput>div>div>input {
-        background: rgba(0,0,0,0.5) !important;
+        background: rgba(0,0,0,0.6) !important;
         color: #ffffff !important;
         border: 2px solid #00c6ff !important;
         border-radius: 12px !important;
@@ -93,7 +86,6 @@ st.markdown("""
         width: 100%;
         margin-top: 20px;
         box-shadow: 0 0 20px rgba(0, 198, 255, 0.5);
-        transition: 0.3s;
     }
     .stButton>button:hover {
         transform: scale(1.03);
@@ -102,7 +94,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# GENERATE 50 PARTICLES
+# 50 PARTICLES
 particles_html = '<div class="particles">'
 for i in range(50):
     size = random.randint(2, 5)
@@ -112,6 +104,7 @@ for i in range(50):
     particles_html += f'<div class="particle" style="width:{size}px; height:{size}px; left:{left}%; animation-duration:{duration}s; animation-delay:{delay}s;"></div>'
 particles_html += '</div>'
 st.markdown(particles_html, unsafe_allow_html=True)
+
 
 st.markdown('<div class="main-box">', unsafe_allow_html=True)
 st.markdown('<h1>🔒 Phishing URL Checker</h1>', unsafe_allow_html=True)
@@ -128,28 +121,18 @@ def check_url(url):
     
     parsed = urlparse(url)
     domain = parsed.netloc.replace('www.', '').lower()
-    url_lower = url.lower()
     
-    # 1. SAFE LIST
-    trusted = ["google.com", "youtube.com", "facebook.com", "amazon.com", "github.com", "microsoft.com", "render.com", "instagram.com"]
+    # SIRF YEHI SAFE - BAAT SAB PHISHING
+    trusted = [
+        "google.com", "youtube.com", "facebook.com", "instagram.com", 
+        "amazon.com", "github.com", "microsoft.com", "twitter.com",
+        "linkedin.com", "netflix.com", "render.com"
+    ]
+    
     if domain in trusted:
         return "SAFE"
     
-    # 2. DIRECT PHISHING SIGNS
-    phishing_keywords = ["login","verify","account","bank","paypal","otp","secure","update","confirm","password"]
-    suspicious_tld = [".tk", ".ml", ".ga", ".cf", ".gq"]
-    
-    if any(word in url_lower for word in phishing_keywords):
-        return "PHISHING"
-    if any(domain.endswith(tld) for tld in suspicious_tld):
-        return "PHISHING"
-    if "@" in url:
-        return "PHISHING"
-    if not url.startswith('https'):
-        return "PHISHING"
-    
-    # 3. BAAT SAB NORMAL SAFE
-    return "SAFE"
+    return "PHISHING"
 
 if st.button("🚀 SCAN URL NOW"):
     result = check_url(url)
